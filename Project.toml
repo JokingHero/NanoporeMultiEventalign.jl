@@ -1,0 +1,4 @@
+name = "NanoporeMultiEventalign"
+uuid = "c438b98d-67fd-45c3-9996-84dfdeb636ca"
+authors = ["JokingHero <kornellabun@gmail.com>"]
+version = "0.1.0"
