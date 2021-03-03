@@ -15,7 +15,7 @@ function loadfast5(path)
     normalized_data = []
     scaling = var_range / digitisation
     for i in raw
-        x = scaling * (i + offset)
+        x = convert(Float32, (scaling * (i + offset)))
         push!(normalized_data, x)
     end
     return normalized_data
