@@ -6,14 +6,14 @@ function loadfast5(path)
     raw_signal = hfile["Raw/Reads/Read_242"]
 
     # Store all the values used for normalization
-    range = read(attributes(channel_info)["range"])
+    var_range = read(attributes(channel_info)["range"])
     digitisation = read(attributes(channel_info)["digitisation"])
     offset = Int(read(attributes(channel_info)["offset"]))
     raw = read(raw_signal["Signal"]) #Int16 array
 
     # Normalization
     normalized_data = []
-    scaling = range / digitisation
+    scaling = var_range / digitisation
     for i in raw
         x = scaling * (i + offset)
         push!(normalized_data, x)
