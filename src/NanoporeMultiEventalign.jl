@@ -8,5 +8,5 @@ include("persistence.jl")
 include("dtw.jl")
 
 export dtw
-
+export loadnanoporefast5
 end # module
