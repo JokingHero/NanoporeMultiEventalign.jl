@@ -1,5 +1,9 @@
-# Here put file load/file write functions
-function loadfast5(path)
+"""
+Normalizes and loads nanopore fast5 file.
+Takes string that describes full path to the fast5 file as input
+and returns the normalized array of type Float32
+"""
+function loadnanoporefast5(path::String)
 
     hfile = h5open(path, "r")
     channel_info = hfile["UniqueGlobalKey/channel_id"]
@@ -15,10 +19,7 @@ function loadfast5(path)
     # Normalization
     normalized_data = []
     scaling = var_range / digitisation
-    for i in raw
-        x = convert(Float32, (scaling * (i + offset)))
-        push!(normalized_data, x)
-    end
+    normalized_data = map(i -> convert(Float32, (scaling * (i + offset))), raw)
     return normalized_data
 
 end
