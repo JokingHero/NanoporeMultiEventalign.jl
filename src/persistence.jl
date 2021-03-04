@@ -3,7 +3,8 @@ function loadfast5(path)
 
     hfile = h5open(path, "r")
     channel_info = hfile["UniqueGlobalKey/channel_id"]
-    raw_signal = hfile["Raw/Reads/Read_242"]
+    read_number = "Raw/Reads/" * keys(hfile["Raw/Reads"])[1]
+    raw_signal = hfile[read_number]
 
     # Store all the values used for normalization
     var_range = read(attributes(channel_info)["range"])
