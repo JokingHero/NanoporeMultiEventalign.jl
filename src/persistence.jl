@@ -1,7 +1,10 @@
 # Here put file load/file write functions
-function loadReference(path)
+function loadfasta(path::String)
     f = FASTA.Reader(open(path,"r"))
+    fastaList = []
     for r in f
-         return FASTA.sequence(r)
+          push!(fastaList, FASTA.sequence(r))
     end
+    close(f)
+    return fastaList
 end

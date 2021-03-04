@@ -10,7 +10,8 @@ include("persistence.jl")
 include("dtw.jl")
 
 
+
 export dtw
-export loadReference
+export loadfasta
 
 end # module
