@@ -1,7 +1,9 @@
 name = "NanoporeMultiEventalign"
 uuid = "c438b98d-67fd-45c3-9996-84dfdeb636ca"
 authors = ["JokingHero <kornellabun@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
