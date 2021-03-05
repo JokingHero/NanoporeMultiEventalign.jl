@@ -1,9 +1,21 @@
-using NanoporeMultiEventalign
 using Test
+using NanoporeMultiEventalign
 
 @testset "dtw.jl" begin
     @testset "dtw" begin
         @test dtw(true)
         @test !dtw(false)
+    end
+end
+
+@testset "persistence.jl" begin
+    @testset "loadfasta" begin
+        @test convert(String,loadfasta("sample_data/reference.fa")[1]) == ""*
+        "GAATACAAGCTACTTGTTCTTTTTGCAGGATCCCATCGATTCGAATTCAAGGCCTCTCGAGCCTCTA"*
+        "GAACTATAGTGAGTCGTATTACGTAGATCCAGACATGATAAGATACATTGATGAGTTTGGACAAACC"*
+        "ACAACTAGAATGCAGTGAAAAAAATGCTTTATTTGTGAAATTTGTGATGCTATTGCTTTATTTGTAA"*
+        "CCATTATAAGCTGCAATAAACAAGTTAACAACAACAATTGCATTCATTTTATGTTTCAGGTTCAGGG"*
+        "GGAGGTGTGGGAGGTTTTTTAATTCGCAAAAAAAAAAGGGAGAGCGACGAGAAGAAGAGGCTTGTAT"*
+        "GGACGATGTCTTCCACAACAGAAGACATCGTCCATACAAGCAAAAAA"
     end
 end
