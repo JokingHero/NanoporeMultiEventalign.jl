@@ -1,6 +1,6 @@
 
 
-function plotdata(path::String)
+function plotfasta(path::String)
     kmers = loadkmers()
     data = loadfasta(path)
     dataString = convert(String, data[1])

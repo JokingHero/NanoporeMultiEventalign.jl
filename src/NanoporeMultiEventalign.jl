@@ -11,6 +11,6 @@ include("utils.jl")
 
 
 export dtw
-export loadfasta, loadkmers, plotdata
+export loadfasta, loadkmers, plotfasta
 
 end # module
