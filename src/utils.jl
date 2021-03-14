@@ -10,6 +10,6 @@ function plotdata(path::String)
         #collects all the kmer values of the data into a lits
         push!(plotList,parse(Float64,kmers[kmerKey][1]))
     end
-    plot(1:(length(plotList)),plotList)
+    plot(1:(length(plotList)),plotList, )
     png("plot")#saves the plot as a png named plot
 end
