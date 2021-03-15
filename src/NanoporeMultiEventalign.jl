@@ -5,12 +5,12 @@ using BioSequences
 using FASTX
 using Plots
 
+include("utils.jl")
 include("persistence.jl")
 include("dtw.jl")
-include("utils.jl")
 
 
 export dtw
-export loadfasta, loadkmers, plotfasta
+export loadfasta, loadkmers, fasta_to_kmer_valus
 
 end # module

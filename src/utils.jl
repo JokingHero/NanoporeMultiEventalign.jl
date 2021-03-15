@@ -1,15 +1,17 @@
-
-
-function plotfasta(path::String)
-    kmers = loadkmers()
-    data = loadfasta(path)
-    dataString = convert(String, data[1])
-    plotList = []
-    for i in 1:(length(dataString)-4)
-        kmerKey = dataString[i:(i+4)]
-        #collects all the kmer values of the data into a lits
-        push!(plotList,parse(Float64,kmers[kmerKey][1]))
+"""
+Gets the corosponding mean and stdv from a fasta sequense using kmer data.
+Takes in fasta data loaded from loadfasta and kmers loaded from loadkmers.
+Returns a list of tuples where the values are {mean, stdv}.
+"""
+function fasta_to_kmer_valus(fastadata, kmers)
+    datastring = convert(String, fastadata[1])
+    fastameans = []
+    # gets the length of a single kmer key
+    keylength = length(collect(keys(kmers))[1])
+    for i in 1:(length(datastring)-keylength+1)
+        kmerkey = datastring[i:(i+keylength-1)]
+        #collects all the kmer means and stdv into a list of tuples
+        push!(fastameans, tuple(parse(Float64, kmers[kmerkey][1]), parse(Float64, kmers[kmerkey][2])))
     end
-    plot(1:(length(plotList)),plotList, )
-    png("plot")#saves the plot as a png named plot
+    return fastameans
 end
