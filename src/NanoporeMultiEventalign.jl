@@ -5,12 +5,17 @@ using BioSequences
 using FASTX
 using Plots
 
+using HDF5
+using BioSequences
+using FASTX
+
 include("utils.jl")
 include("persistence.jl")
 include("dtw.jl")
 
 
 export dtw
-export loadfasta, loadkmers, fasta_to_kmer_valus
+export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_valus
+
 
 end # module
