@@ -15,7 +15,7 @@ include("dtw.jl")
 
 
 export dtw
-export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_valus
+export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_values
 
 
 end # module
