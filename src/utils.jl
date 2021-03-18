@@ -16,4 +16,3 @@ function fasta_to_kmer_values(fastadata, kmers)
     end
     return fastameans
 end
-

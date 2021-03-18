@@ -8,7 +8,7 @@ using NanoporeMultiEventalign
     end
 end
 
-
+@testset "persistence.jl" begin
     @testset "loadnanoporefast5" begin
         @test loadnanoporefast5(
             "sample_data/fast5/control/0/" *

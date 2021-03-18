@@ -1,17 +1,23 @@
+## NanoporeMultiEventalign  
 
-For example data treated sample is extra complicated as some of the bases are methylated and will not conform to the normal distributions. 
-Control sample is normal, reference.fa contains reference sequence of our example datasets. Fastq files are basecalled sequences of corresponding fast5 reads.
+Julia package for multiple sequence alignment on raw reads from Oxford Nanopore.
+Similarly to resquiggle it uses Dynamic Time Warping to polish the read
+after basecalling, however it can work on multiple reads at the same time.
 
-Fast5 format can be read with H5 libraries, reads from the nanopore have to be normalized before procesing.
-PicoAmp normaliation is as follows:
 
-```
-scaling = channel_info["range"] / channel_info["digitisation"]  
-offset = int(channel_info["offset"]  
-normalized_data = np.array(scaling * (raw + offset), dtype = np.float32)
-```
+## LICENSE  
 
-Each fast5 has its own channel_info and this has to be adjusted for each file.
+Copyright (C) 2021  Kornel Labun
 
-Reference.fa contains sequence for the expected kmers, combined with the models/r9.4_70bps.u_to_t_rna.5mer.template.model
-you can simulate fake reads using level_mean as current mean and level_stdv as current standard deviation.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
