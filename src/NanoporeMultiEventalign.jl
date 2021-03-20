@@ -4,10 +4,7 @@ module NanoporeMultiEventalign
 using BioSequences
 using FASTX
 using Plots
-
 using HDF5
-using BioSequences
-using FASTX
 
 include("utils.jl")
 include("persistence.jl")
