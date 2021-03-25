@@ -12,7 +12,7 @@ include("persistence.jl")
 include("dtw.jl")
 
 
-export dtw
+export dtw_test
 export dtw_stretched
 export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_values
 
