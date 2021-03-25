@@ -5,6 +5,7 @@ using BioSequences
 using FASTX
 using Plots
 using HDF5
+using DynamicAxisWarping
 
 include("utils.jl")
 include("persistence.jl")
@@ -12,6 +13,7 @@ include("dtw.jl")
 
 
 export dtw
+export dtw_stretched
 export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_values
 
 
