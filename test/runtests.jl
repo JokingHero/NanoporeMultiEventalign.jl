@@ -3,8 +3,8 @@ using NanoporeMultiEventalign
 
 @testset "dtw.jl" begin
     @testset "dtw" begin
-        @test dtw(true)
-        @test !dtw(false)
+        #@test dtw(true)
+        #@test !dtw(false)
     end
 end
 
@@ -23,5 +23,12 @@ end
             "CCATTATAAGCTGCAATAAACAAGTTAACAACAACAATTGCATTCATTTTATGTTTCAGGTTCAGGG"*
             "GGAGGTGTGGGAGGTTTTTTAATTCGCAAAAAAAAAAGGGAGAGCGACGAGAAGAAGAGGCTTGTAT"*
             "GGACGATGTCTTCCACAACAGAAGACATCGTCCATACAAGCAAAAAA"
+    end
+end
+
+@testset "utils.jl" begin
+    @testset "Bhattacharyya" begin
+        @test Bhattacharyya(kmerDist(1,1),kmerDist(1,1)) == 0.0
+        @test Bhattacharyya(kmerDist(1,2),kmerDist(3,2)) == 0.029445758914095864
     end
 end
