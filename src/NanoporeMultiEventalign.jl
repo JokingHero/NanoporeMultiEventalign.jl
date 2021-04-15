@@ -11,9 +11,7 @@ include("utils.jl")
 include("persistence.jl")
 include("dtw.jl")
 
-a = [kmerDist(1,2),kmerDist(2,2),kmerDist(3,2),kmerDist(4,2),kmerDist(5,2)]
-b = [kmerDist(3,2),kmerDist(4,2),kmerDist(5,2),kmerDist(6,2),kmerDist(7,2)]
-println(dtw2(a,b))
+
 
 
 
