@@ -4,12 +4,12 @@ module NanoporeMultiEventalign
 using BioSequences
 using FASTX
 using HDF5
-using Changepoints
 using DynamicAxisWarping
 
 include("utils.jl")
 include("persistence.jl")
 include("dtw.jl")
+include("ChangePointDetection.jl")
 
 
 
