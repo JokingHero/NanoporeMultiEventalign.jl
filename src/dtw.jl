@@ -1,10 +1,15 @@
 
 "
-Probable input: Vector, Vector, distance
+computes the dtw cost and allignment for sets of fast5 data
 "
 function nanopore_dtw(x::Vector{Float32}, y::Vector{Float32})
+    kmers = loadkmers()
+    changepoints1 = detect_change_points(x, kmers)
+    changepoints2 = detect_change_points(y, kmers)
+    kmerdists1 = kmerdist_from_changepoints(x, changepoints1)
+    kmerdists2 = kmerdist_from_changepoints(y, changepoints2)
 
-    return fakevar
+    return dtw_bhattacharyya(kmerdists1, kmerdists2)
 end
 
 """
@@ -48,6 +53,7 @@ function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDi
 
     return D
 end
+
 
 function trackback_bhattacharyya(D::AbstractMatrix{T}) where {T<:Number}
 
