@@ -4,13 +4,13 @@ module NanoporeMultiEventalign
 using BioSequences
 using FASTX
 using HDF5
-using Changepoints
 using DynamicAxisWarping
 using ChangePointDetection
 
 include("utils.jl")
 include("persistence.jl")
 include("dtw.jl")
+include("ChangePointDetection.jl")
 
 X = [1.3,3.3,4.3,5.3]
 C = [3.3,04.3,5.3,6.2]
