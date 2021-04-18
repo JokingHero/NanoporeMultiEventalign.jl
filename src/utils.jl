@@ -123,3 +123,22 @@ end
         end
     end
 end
+
+function detect_change_points(x::Vector{Float32}, kmers::Dict{Any})
+    allKeys = keys(kmers)
+    stDv = 0
+    for key in allKeys
+        stDv += parse(Float64, kmers[key][2])
+    end
+    stDv /= length(kmers) # Average standard deviation of the kmers list, also defines the threshold
+    changePoints = [] # list of changepoints detected
+    
+    for i in 1:length(x)-1 
+        if (abs(x[i] - x[i+1]) > stDv)
+            push!(changePoints, i)
+        end
+    end
+
+    return changePoints
+end
+
