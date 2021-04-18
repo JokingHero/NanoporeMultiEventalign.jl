@@ -5,6 +5,7 @@ version = "0.1.1"
 
 [deps]
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+ChangePointDetection = "68f453bf-a161-50e8-aafe-8ad75c8d6944"
 Changepoints = "98700a41-f20d-59c7-9e81-44d0470ae598"
 DynamicAxisWarping = "aaaaaaaa-4a10-5553-b683-e707b00e83ce"
 FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
