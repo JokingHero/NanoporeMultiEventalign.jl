@@ -28,7 +28,7 @@ end
 
 @testset "utils.jl" begin
     @testset "Bhattacharyya" begin
-        @test Bhattacharyya(kmerDist(1,1),kmerDist(1,1)) == 0.0
-        @test Bhattacharyya(kmerDist(1,2),kmerDist(3,2)) == 0.029445758914095864
+        @test bhattacharyya(kmerdist(1,1),kmerdist(1,1)) == 0.0
+        @test bhattacharyya(kmerdist(1,2),kmerdist(3,2)) == 0.029445758914095864
     end
 end

@@ -13,7 +13,7 @@ include("dtw.jl")
 
 export nanopore_dtw
 export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_values
-export kmerdist, dhattacharyya
+export kmerdist, bhattacharyya
 
 
 end # module

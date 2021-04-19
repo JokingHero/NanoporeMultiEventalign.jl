@@ -15,13 +15,13 @@ end
 """
 computes the dtw of 2 Array{kmerDist} using the bhattacharyya distance
 """
-function dtw_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDist})
+function dtw_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist})
     D = dtw_cost_matrix_bhattacharyya(seq1,seq2)
     return trackback_bhattacharyya(D)
 end
 
 
-function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDist},
+function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist},
     transportcost=1) where T
     # Build the cost matrix
     m = length(seq2)
@@ -29,13 +29,13 @@ function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDi
 
     # Initialize first column and first row
     D = pairwise_bhattacharyya(seq1,seq2)
-    @assert size(D) == (m,n)
+    @assert size(D) == (m, n)
 
     for r=2:m
-        D[r,1] += D[r-1,1]
+        D[r, 1] += D[r-1, 1]
     end
     for c=2:n
-        D[1,c] += D[1,c-1]
+        D[1, c] += D[1, c-1]
     end
 
     # Complete the cost matrix
@@ -46,10 +46,6 @@ function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDi
         end
     end
 
-    if filterkernel !== nothing
-        D = imfilter(D, filterkernel)
-    end
-
     return D
 end
 
@@ -57,7 +53,7 @@ end
 function trackback_bhattacharyya(D::AbstractMatrix{T}) where {T<:Number}
 
     # initialize trackback throught rows/columns
-    r, c       = size(D)
+    r, c = size(D)
     rows, cols = Int[r], Int[c]
 
     # estimate that we'll need N⋅logN elements
