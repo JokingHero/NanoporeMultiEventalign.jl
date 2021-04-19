@@ -22,8 +22,7 @@ end
 
 
 function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerDist}, seq2::Array{kmerDist},
-    transportcost=1,
-    filterkernel = nothing) where T
+    transportcost=1) where T
     # Build the cost matrix
     m = length(seq2)
     n = length(seq1)

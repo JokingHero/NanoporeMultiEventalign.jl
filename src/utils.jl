@@ -17,7 +17,7 @@ function fasta_to_kmer_values(fastadata, kmers)
     return fastameans
 end
 
-struct kmerDist
+struct kmerdist
     mean::Float32
     sd::Float32
 end
@@ -26,14 +26,14 @@ end
 """
 computes the Bhattacharyya distance of two kmerDist x and y
 """
-function Bhattacharyya(x::kmerDist,y::kmerDist)
+function bhattacharyya(x::kmerdist,y::kmerdist)
     xsd = x.sd
     ysd = y.sd
     if xsd == 0
-        xsd = 0.00001
+        xsd = 0.000000001
     end
     if ysd == 0
-        ysd = 0.00001
+        ysd = 0.000000001
     end
     arg1 = 1/4*((xsd*xsd)/(ysd*ysd) + (ysd*ysd)/(xsd*xsd) + 2)
     arg2 = 1/4*((x.mean - y.mean)*(x.mean - y.mean)/(xsd*xsd + ysd*ysd))
@@ -44,23 +44,23 @@ end
 computetes the bhattacharyya distance for every pair in 2 kmerDist arrays
 and fills out an array with the result
 """
-function pairwise_bhattacharyya(s1::Array{kmerDist},s2::Array{kmerDist})
-    [Bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
+function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
+    return [bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
 end
 
 
 @inline function indmin3(a,b,c,i,j)
     if a <= b
         if a <= c
-            return 1,i-1,j-1
+            return 1, i-1, j-1
         else
-            return 3,i,j-1
+            return 3, i, j-1
         end
     else
         if b <= c
-            return 2,i-1,j
+            return 2, i-1, j
         else
-            return 3,i,j-1
+            return 3, i, j-1
         end
     end
 end
@@ -93,7 +93,7 @@ end
 computes the mean and standard deviation for each of the changepoints
 in fast5 data
 """
-function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any})::Array{kmerDist}
+function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any})::Array{kmerdist}
     kmerdists = []
     for i in 2:length(changepoints)
         #computes the average of a changepoint
@@ -109,7 +109,7 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
         end
         stdv /= changepoints[i] - changepoints[i-1]
         stdv = sqrt(stdv)
-        push!(kmerdists, kmerDist(average, stdv))
+        push!(kmerdists, kmerdist(average, stdv))
     end
     return kmerdists
 end
