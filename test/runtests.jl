@@ -2,9 +2,25 @@ using Test
 using NanoporeMultiEventalign
 
 @testset "dtw.jl" begin
-    @testset "dtw" begin
-        #@test dtw(true)
-        #@test !dtw(false)
+    @testset "nanopore_dtw" begin
+        @test nanopore_dtw(
+        convert(Vector{Float32}, [1,7,1,6,0,1,6,1]),
+        convert(Vector{Float32}, [1,7,1,6,0,1,6,1]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] == 0.0
+
+        @test nanopore_dtw(
+        convert(Vector{Float32}, [1,7,1,6,0,1,6,1]),
+        convert(Vector{Float32}, [1,6,1,0,6,1,7,1]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] != 0.0
+
+        @test nanopore_dtw( # tests the chengepoints detection
+        convert(Vector{Float32}, [1,2,3,4,5,6,7]),
+        convert(Vector{Float32}, [7,6,5,4,3,2,1]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] == 0.0
+
     end
 end
 
@@ -27,7 +43,7 @@ end
 end
 
 @testset "utils.jl" begin
-    @testset "Bhattacharyya" begin
+    @testset "bhattacharyya" begin
         @test bhattacharyya(kmerdist(1,1),kmerdist(1,1)) == 0.0
         @test bhattacharyya(kmerdist(1,2),kmerdist(3,2)) == 0.029445758914095864
     end
