@@ -20,6 +20,7 @@ end
 struct kmerdist
     mean::Float32
     sd::Float32
+    originaldata::Array{Float32}
 end
 
 
@@ -98,8 +99,10 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
     for i in 2:length(changepoints)
         #computes the average of a changepoint
         average = 0
+        datalist = []
         for j in changepoints[i-1]:changepoints[i]-1
             average += x[j]
+            push!(datalist,x[j])
         end
         average /= changepoints[i] - changepoints[i-1]
         #computes the standard deviation of a changeoint
@@ -109,7 +112,7 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
         end
         stdv /= changepoints[i] - changepoints[i-1]
         stdv = sqrt(stdv)
-        push!(kmerdists, kmerdist(average, stdv))
+        push!(kmerdists, kmerdist(average, stdv, datalist))
     end
     return kmerdists
 end
