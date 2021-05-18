@@ -12,6 +12,17 @@ function nanopore_dtw(x::Vector{Float32}, y::Vector{Float32},
     return dtw_bhattacharyya(kmerdists1, kmerdists2)
 end
 
+
+function nanopore_multi_dtw(x::Vector{Vector{Float32}},
+     kmerpath::String = "models/r9.4_70bps.u_to_t_rna.5mer.template.model")
+    kmers = loadkmers(kmerpath)
+    kmerdists::Array{Array{kmerdist}} = []
+    for i in x
+        push!(kmerdists, kmerdist_from_changepoints(i,detect_change_points(i, kmers)))
+    end
+    return dtw_multiple_cost_matrix_bhattacharyya(kmerdists)
+end
+
 "
 computes the dtw cost and allignment for sets of fast5 data and plots the result
 "
@@ -47,6 +58,42 @@ computes the dtw of 2 Array{kmerDist} using the bhattacharyya distance
 function dtw_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist})
     D = dtw_cost_matrix_bhattacharyya(seq1,seq2)
     return trackback_bhattacharyya(D)
+end
+
+function dtw_multiple_cost_matrix_bhattacharyya(seq::Array{Array{kmerdist}},
+    transportcost=1) where T
+
+
+    # Build the cost matrix
+    D = []
+    for i in 1:(length(seq)-1)
+        for j in (i+1):length(seq)
+            push!(D,pairwise_bhattacharyya(seq[i],seq[j]))
+        end
+    end
+
+    # Initialize first column and first row
+    for i in 1:length(D)
+        for r=2:size(D[i])[1]
+            D[i][r, 1] += D[i][r-1, 1]
+        end
+        for c=2:size(D[i])[2]
+            D[i][1, c] += D[i][1, c-1]
+        end
+    end
+
+
+    # Complete the cost matrix
+    for i in 1:length(D)
+        for c = 2:size(D[i])[2]
+            for r = 2:size(D[i])[1]
+                best_neighbor_cost = min(transportcost*D[i][r-1, c], D[i][r-1, c-1], transportcost*D[i][r, c-1])
+                D[i][r, c] += best_neighbor_cost
+            end
+        end
+    end
+
+    return D
 end
 
 
