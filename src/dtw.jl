@@ -15,12 +15,8 @@ end
 
 function nanopore_multi_dtw(x::Vector{Vector{Float32}},
      kmerpath::String = "models/r9.4_70bps.u_to_t_rna.5mer.template.model")
-    kmers = loadkmers(kmerpath)
-    kmerdists::Array{Array{kmerdist}} = []
-    for i in x
-        push!(kmerdists, kmerdist_from_changepoints(i,detect_change_points(i, kmers)))
-    end
-    return dtw_multiple_cost_matrix_bhattacharyya(kmerdists)
+
+    return dtw_multiple_cost_matrix_bhattacharyya(x)
 end
 
 "
@@ -60,38 +56,55 @@ function dtw_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist})
     return trackback_bhattacharyya(D)
 end
 
-function dtw_multiple_cost_matrix_bhattacharyya(seq::Array{Array{kmerdist}},
-    transportcost=1) where T
+function dtw_multiple_cost_matrix_bhattacharyya(seq::Array{Array{Float32}},
+    segmentsize = 100, transportcost=1) where T
 
+    #split the data into segments of size segmentsize
+    #note: if the sequences doesn't cleanly split into
+    #segments, it will just discard the remaining data
+    splitseq::Array{Array{Array{Float32}}} = []
+    for s in seq
+        i = 1
+        segments = []
+        while i+segmentsize-1 < length(s)
+            push!(segments,s[i:i+segmentsize-1])
+            i += segmentsize
+        end
+        push!(splitseq, segments)
+    end
+
+    #stores the length of all the sequenses
+    seqlengths::Array{Int64} = []
+    for s in splitseq
+        if length(s) == 0
+            return
+        end
+        push!(seqlengths, length(s))
+    end
 
     # Build the cost matrix
-    D = []
-    for i in 1:(length(seq)-1)
-        for j in (i+1):length(seq)
-            push!(D,pairwise_bhattacharyya(seq[i],seq[j]))
-        end
-    end
+    D = multi_pairwise_bhattacharyya(splitseq, seqlengths)
 
     # Initialize first column and first row
-    for i in 1:length(D)
-        for r=2:size(D[i])[1]
-            D[i][r, 1] += D[i][r-1, 1]
-        end
-        for c=2:size(D[i])[2]
-            D[i][1, c] += D[i][1, c-1]
-        end
-    end
-
-
-    # Complete the cost matrix
-    for i in 1:length(D)
-        for c = 2:size(D[i])[2]
-            for r = 2:size(D[i])[1]
-                best_neighbor_cost = min(transportcost*D[i][r-1, c], D[i][r-1, c-1], transportcost*D[i][r, c-1])
-                D[i][r, c] += best_neighbor_cost
-            end
-        end
-    end
+    # for i in 1:length(D)
+    #     for r=2:size(D[i])[1]
+    #         D[i][r, 1] += D[i][r-1, 1]
+    #     end
+    #     for c=2:size(D[i])[2]
+    #         D[i][1, c] += D[i][1, c-1]
+    #     end
+    # end
+    #
+    #
+    # # Complete the cost matrix
+    # for i in 1:length(D)
+    #     for c = 2:size(D[i])[2]
+    #         for r = 2:size(D[i])[1]
+    #             best_neighbor_cost = min(transportcost*D[i][r-1, c], D[i][r-1, c-1], transportcost*D[i][r, c-1])
+    #             D[i][r, c] += best_neighbor_cost
+    #         end
+    #     end
+    # end
 
     return D
 end

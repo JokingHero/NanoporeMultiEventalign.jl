@@ -42,6 +42,23 @@ function bhattacharyya(x::kmerdist,y::kmerdist)
 end
 
 """
+a function that computes the Bhattacharyya coefficient of
+n-distribution
+"""
+function multi_bhattacharyya(data::Array{Array{Float32}})
+    value = 0
+    for i in 1:length(data[1])
+        d = 1
+        for j in 1:length(data)
+            d *= data[j][i]
+        end
+        #takes the n-th root of the product and adds it to the total
+        value += d^(1/length(data))
+    end
+    return value
+end
+
+"""
 computetes the bhattacharyya distance for every pair in 2 kmerDist arrays
 and fills out an array with the result
 """
@@ -49,6 +66,36 @@ function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
     return [bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
 end
 
+
+function multi_pairwise_bhattacharyya(seq::Array{Array{Array{Float32}}}, sizes::Array{Int64})
+    costmat = zeros(sizes...)
+    searchpos = convert(Array{Int64},ones(length(seq)))
+    multi_fill_costmatrix(seq, costmat, searchpos)
+    return costmat
+end
+
+"""
+a function that recusivly fills out a cost matrix (costmat)
+"""
+function multi_fill_costmatrix(seq::Array{Array{Array{Float32}}}, costmat, searchpos)
+    #checks if thos point has not already been computed
+    if costmat[searchpos...] != 0
+        return
+    end
+    searchdata::Array{Array{Float32}} = []
+    for i in 1:length(seq)
+        push!(searchdata, seq[i][searchpos[i]])
+        #creates a new point to compute
+        newsearch = copy(searchpos)
+        newsearch[i]+=1
+        #checks if this point is inside of the cost matrix
+        if checkbounds(Bool,costmat, newsearch...)
+            multi_fill_costmatrix(seq, costmat, newsearch)
+        end
+    end
+    #computes the cost at that point
+    costmat[searchpos...] = multi_bhattacharyya(searchdata)
+end
 
 @inline function indmin3(a,b,c,i,j)
     if a <= b
