@@ -13,10 +13,15 @@ function nanopore_dtw(x::Vector{Float32}, y::Vector{Float32},
 end
 
 
-function nanopore_multi_dtw(x::Vector{Vector{Float32}},
+function multi_nanopore_dtw(x::Vector{Vector{Float32}},
      kmerpath::String = "models/r9.4_70bps.u_to_t_rna.5mer.template.model")
+     kmers = loadkmers(kmerpath)
+     kmerdists::Array{Array{kmerdist}} = []
+     for i in x
+        push!(kmerdists, kmerdist_from_changepoints(i, detect_change_points(i, kmers)))
+     end
 
-    return dtw_multiple_cost_matrix_bhattacharyya(x)
+     return multi_dtw_cost_matrix_bhattacharyya(kmerdists)
 end
 
 "
@@ -56,34 +61,17 @@ function dtw_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist})
     return trackback_bhattacharyya(D)
 end
 
-function dtw_multiple_cost_matrix_bhattacharyya(seq::Array{Array{Float32}},
-    segmentsize = 100, transportcost=1) where T
-
-    #split the data into segments of size segmentsize
-    #note: if the sequences doesn't cleanly split into
-    #segments, it will just discard the remaining data
-    splitseq::Array{Array{Array{Float32}}} = []
-    for s in seq
-        i = 1
-        segments = []
-        while i+segmentsize-1 < length(s)
-            push!(segments,s[i:i+segmentsize-1])
-            i += segmentsize
-        end
-        push!(splitseq, segments)
-    end
+function multi_dtw_cost_matrix_bhattacharyya(seq::Array{Array{kmerdist}},
+    transportcost=1)
 
     #stores the length of all the sequenses
     seqlengths::Array{Int64} = []
-    for s in splitseq
-        if length(s) == 0
-            return
-        end
+    for s in seq
         push!(seqlengths, length(s))
     end
 
     # Build the cost matrix
-    D = multi_pairwise_bhattacharyya(splitseq, seqlengths)
+    D = multi_pairwise_bhattacharyya(seq, seqlengths)
 
     # Initialize first column and first row
     # for i in 1:length(D)

@@ -45,17 +45,37 @@ end
 a function that computes the Bhattacharyya coefficient of
 n-distribution
 """
-function multi_bhattacharyya(data::Array{Array{Float32}})
-    value = 0
-    for i in 1:length(data[1])
-        d = 1
-        for j in 1:length(data)
-            d *= data[j][i]
+function multi_bhattacharyya(data::Array{kmerdist},
+     n::Union{Nothing, Int} = nothing)
+     sizes = []
+     mini = Inf
+     maxi = 0
+     for d in data
+        push!(sizes, length(d.originaldata))
+        #findes the maximum and minimum values of all the data
+        mi = min(d.originaldata...)
+        ma = max(d.originaldata...)
+        if (mi < mini) mini = mi end
+        if (ma > maxi) maxi = ma end
+     end
+     if n == nothing
+         n = ceil(sum(sizes)/length(data))
+     end
+     value = 0;
+     partitiondelta = (maxi - mini)/n
+     for i in 1:n
+        part_start = mini + partitiondelta * (i-1)
+        part_end = mini + partitiondelta * i
+        part_count = []
+        for d in data
+            #counts all the data that is in the interval part_start-part_end
+            push!(part_count,count(x->((x >= part_start && x < part_end)
+            || x == maxi), d.originaldata))
         end
-        #takes the n-th root of the product and adds it to the total
-        value += d^(1/length(data))
-    end
-    return value
+        # adds the nth-root of the product
+        value += prod(part_count)^(1/length(data))
+     end
+     return value
 end
 
 """
@@ -67,7 +87,7 @@ function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
 end
 
 
-function multi_pairwise_bhattacharyya(seq::Array{Array{Array{Float32}}}, sizes::Array{Int64})
+function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
     costmat = zeros(sizes...)
     searchpos = convert(Array{Int64},ones(length(seq)))
     multi_fill_costmatrix(seq, costmat, searchpos)
@@ -77,12 +97,12 @@ end
 """
 a function that recusivly fills out a cost matrix (costmat)
 """
-function multi_fill_costmatrix(seq::Array{Array{Array{Float32}}}, costmat, searchpos)
-    #checks if thos point has not already been computed
+function multi_fill_costmatrix(seq::Array{Array{kmerdist}}, costmat, searchpos)
+    #checks if this point has not already been computed
     if costmat[searchpos...] != 0
         return
     end
-    searchdata::Array{Array{Float32}} = []
+    searchdata::Array{kmerdist} = []
     for i in 1:length(seq)
         push!(searchdata, seq[i][searchpos[i]])
         #creates a new point to compute
