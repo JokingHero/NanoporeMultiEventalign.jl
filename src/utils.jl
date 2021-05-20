@@ -86,7 +86,6 @@ function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
     return [bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
 end
 
-
 function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
     costmat = zeros(sizes...)
     searchpos = convert(Array{Int64},ones(length(seq)))
@@ -94,24 +93,25 @@ function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{
     return costmat
 end
 
+
 """
 a function that recusivly fills out a cost matrix (costmat)
 """
 function multi_fill_costmatrix(seq::Array{Array{kmerdist}}, costmat, searchpos)
-    #checks if this point has not already been computed
-    if costmat[searchpos...] != 0
-        return
-    end
-    searchdata::Array{kmerdist} = []
     for i in 1:length(seq)
-        push!(searchdata, seq[i][searchpos[i]])
         #creates a new point to compute
         newsearch = copy(searchpos)
         newsearch[i]+=1
+        #checks if this point has not already been computed and
         #checks if this point is inside of the cost matrix
-        if checkbounds(Bool,costmat, newsearch...)
+        if checkbounds(Bool,costmat, newsearch...) && costmat[newsearch...] == 0.0
             multi_fill_costmatrix(seq, costmat, newsearch)
         end
+    end
+
+    searchdata::Array{kmerdist} = []
+    for i in 1:length(seq)
+        push!(searchdata, seq[i][searchpos[i]])
     end
     #computes the cost at that point
     costmat[searchpos...] = multi_bhattacharyya(searchdata)
