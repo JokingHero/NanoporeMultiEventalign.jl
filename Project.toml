@@ -4,6 +4,7 @@ authors = ["JokingHero <kornellabun@gmail.com>"]
 version = "0.1.1"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
 FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"

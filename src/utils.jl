@@ -20,6 +20,8 @@ end
 struct kmerdist
     mean::Float32
     sd::Float32
+    minVal::Float32
+    maxVal::Float32
     originaldata::Array{Float32}
 end
 
@@ -47,35 +49,47 @@ n-distribution
 """
 function multi_bhattacharyya(data::Array{kmerdist},
      n::Union{Nothing, Int} = nothing)
-     sizes = []
-     mini = Inf
-     maxi = 0
-     for d in data
-        push!(sizes, length(d.originaldata))
-        #findes the maximum and minimum values of all the data
-        mi = min(d.originaldata...)
-        ma = max(d.originaldata...)
-        if (mi < mini) mini = mi end
-        if (ma > maxi) maxi = ma end
+     if n === nothing
+         lensum = 0
+         for d in data
+             lensum += length(d.originaldata)
+         end
+         n = cld(lensum,length(data))
      end
-     if n == nothing
-         n = ceil(sum(sizes)/length(data))
+     #findes the maximum and minimum values of all the data
+     mini::Float32 = data[1].minVal
+     maxi::Float32 = data[1].maxVal
+     for d in 2:length(data)
+        @inbounds if (mini > data[d].minVal) mini = data[d].minVal end
+        @inbounds if (maxi < data[d].maxVal) maxi = data[d].maxVal end
      end
      value = 0;
-     partitiondelta = (maxi - mini)/n
+     partitiondelta::Float32 = (maxi - mini)/n
      for i in 1:n
-        part_start = mini + partitiondelta * (i-1)
-        part_end = mini + partitiondelta * i
-        part_count = []
+        part_start::Float32 = mini + partitiondelta * (i-1)
+        part_end::Float32 = mini + partitiondelta * i
+        part_count = 1
         for d in data
             #counts all the data that is in the interval part_start-part_end
-            push!(part_count,count(x->((x >= part_start && x < part_end)
-            || x == maxi), d.originaldata))
+            part_count *= countbetween(part_start, part_end, maxi, d.originaldata)
         end
         # adds the nth-root of the product
-        value += prod(part_count)^(1/length(data))
+        value += part_count^(1/length(data))
      end
      return value
+end
+
+"""
+found out the built in count function added a lot more
+time then it needed to, so this is simple replacement
+"""
+function countbetween(part_start::Float32,
+    part_end::Float32,maxi::Float32,data::Vector{Float32})
+    value = 0
+    for d in data
+        value += (d >= part_start && d < part_end) || d === maxi
+    end
+    return value
 end
 
 """
@@ -89,32 +103,22 @@ end
 function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
     costmat = zeros(sizes...)
     searchpos = convert(Array{Int64},ones(length(seq)))
-    multi_fill_costmatrix(seq, costmat, searchpos)
-    return costmat
-end
+    searchdata = Array{kmerdist}(undef, length(sizes))
+    while true
+        for i in 1:length(sizes)
+            searchdata[i] = seq[i][searchpos[i]]
+        end
+        #computes the cost at that point
+        costmat[searchpos...] = multi_bhattacharyya(searchdata)
 
-
-"""
-a function that recusivly fills out a cost matrix (costmat)
-"""
-function multi_fill_costmatrix(seq::Array{Array{kmerdist}}, costmat, searchpos)
-    for i in 1:length(seq)
-        #creates a new point to compute
-        newsearch = copy(searchpos)
-        newsearch[i]+=1
-        #checks if this point has not already been computed and
-        #checks if this point is inside of the cost matrix
-        if checkbounds(Bool,costmat, newsearch...) && costmat[newsearch...] == 0.0
-            multi_fill_costmatrix(seq, costmat, newsearch)
+        if searchpos == sizes break end
+        for i in 1:length(sizes)
+            searchpos[i]+=1
+            if searchpos[i] <= sizes[i] break end
+            searchpos[i] = 1
         end
     end
-
-    searchdata::Array{kmerdist} = []
-    for i in 1:length(seq)
-        push!(searchdata, seq[i][searchpos[i]])
-    end
-    #computes the cost at that point
-    costmat[searchpos...] = multi_bhattacharyya(searchdata)
+    return costmat
 end
 
 @inline function indmin3(a,b,c,i,j)
@@ -179,7 +183,7 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
         end
         stdv /= changepoints[i] - changepoints[i-1]
         stdv = sqrt(stdv)
-        push!(kmerdists, kmerdist(average, stdv, datalist))
+        push!(kmerdists, kmerdist(average, stdv, min(datalist...), max(datalist...), datalist))
     end
     return kmerdists
 end
