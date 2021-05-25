@@ -178,7 +178,7 @@ function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
 
     # do trackback
     @inbounds while point != nullp
-        point = indmaxn(D,point)
+        point = indminn(D,point)
         for i in 1:length(point)
             push!(data[i], point[i])
         end
@@ -192,12 +192,12 @@ end
 
 
 """
-a function to find the indexes of the maximum value out of
+a function to find the indexes of the minimum value out of
 costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
 at a pos when costmat is an n-dimensional matrix
 """
-function indmaxn(costmat, pos::Array{Int64})
-    maxval = Inf
+function indminn(costmat, pos::Array{Int64})
+    minval = Inf
     len = length(pos)
     bestpos = Vector{Int64}(undef,len)
 
@@ -208,8 +208,8 @@ function indmaxn(costmat, pos::Array{Int64})
         end
         if !checkbounds(Bool, costmat, newpos... ) continue end
         val = costmat[newpos...]
-        if (val <= maxval)
-            maxval = val
+        if (val <= minval)
+            minval = val
             bestpos = newpos
         end
     end
