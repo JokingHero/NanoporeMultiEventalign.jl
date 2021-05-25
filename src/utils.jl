@@ -87,7 +87,7 @@ function countbetween(part_start::Float32,
     part_end::Float32,maxi::Float32,data::Vector{Float32})
     value = 0
     for d in data
-        value += (d >= part_start && d < part_end) || d === maxi
+        value += (d >= part_start && d < part_end) || (d === maxi && part_end === maxi)
     end
     return value
 end
@@ -100,6 +100,9 @@ function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
     return [bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
 end
 
+"""
+fills out an n-dimentional dtw cost matrix
+"""
 function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
     costmat = zeros(sizes...)
     searchpos = convert(Array{Int64},ones(length(seq)))
@@ -108,11 +111,9 @@ function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{
         @inbounds searchdata[i] = seq[i][searchpos[i]]
     end
     while true
-
         #computes the cost at that point
         k = multi_maxval(costmat, searchpos)
-        @inbounds costmat[searchpos...] =
-        multi_bhattacharyya(searchdata) + k
+        @inbounds costmat[searchpos...] = k + multi_bhattacharyya(searchdata)
 
         if searchpos == sizes break end
         for i in 1:length(sizes)
@@ -128,6 +129,11 @@ function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{
     return costmat
 end
 
+"""
+a function to find the maximum value out of
+costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
+at a searchpos when costmat is an n-dimensional matrix
+"""
 @inline function multi_maxval(costmat, searchpos::Array{Int64})
     maxval = 0
     len = length(searchpos)

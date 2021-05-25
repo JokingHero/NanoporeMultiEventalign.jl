@@ -20,8 +20,46 @@ function multi_nanopore_dtw(x::Vector{Vector{Float32}},
      for i in x
         push!(kmerdists, kmerdist_from_changepoints(i, detect_change_points(i, kmers)))
      end
+     seqlengths::Array{Int64} = []
+     for s in kmerdists
+         push!(seqlengths, length(s))
+     end
+     D = multi_pairwise_bhattacharyya(kmerdists, seqlengths)
+     return multi_trackback_bhattacharyya(D, seqlengths)
+end
 
-     return multi_dtw_cost_matrix_bhattacharyya(kmerdists)
+"""
+temporary function to graphically test the multi nanopore dtw function
+"""
+function multi_nanopore_dtw_plot(x::Vector{Vector{Float32}},
+    seperation::Int64 = 20, stepsize::Int64 = 20,
+     kmerpath::String = "models/r9.4_70bps.u_to_t_rna.5mer.template.model")
+     kmers = loadkmers(kmerpath)
+     kmerdists::Array{Array{kmerdist}} = []
+     for i in x
+        push!(kmerdists, kmerdist_from_changepoints(i, detect_change_points(i, kmers)))
+     end
+     seqlengths::Array{Int64} = []
+     for s in kmerdists
+         push!(seqlengths, length(s))
+     end
+     D = multi_pairwise_bhattacharyya(kmerdists, seqlengths)
+     a,b = multi_trackback_bhattacharyya(D, seqlengths)
+     o = []
+     for i in kmerdists[1]
+         push!(o,i.mean+seperation)
+     end
+     pl = plot(o,thickness_scaling = 2, size = (1500,1000)) #plots mean points for the first graph
+     p = []
+     for i in kmerdists[2]
+         push!(p,i.mean-seperation)
+     end
+     plot!(p,thickness_scaling = 2) #plots mean points for the second graph
+
+     for i in 1:stepsize:length(b[1]) # plots the connecting lines between the grafs
+         plot!([b[1][i], b[2][i]], [o[b[1][i]], p[b[2][i]]],color = :black,thickness_scaling = 1, alpha = 0.5, label = false)
+     end
+     return pl
 end
 
 "
@@ -61,19 +99,6 @@ function dtw_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist})
     return trackback_bhattacharyya(D)
 end
 
-function multi_dtw_cost_matrix_bhattacharyya(seq::Array{Array{kmerdist}},
-    transportcost=1)
-
-    #stores the length of all the sequenses
-    seqlengths::Array{Int64} = []
-    for s in seq
-        push!(seqlengths, length(s))
-    end
-
-    # Build the cost matrix
-    D = multi_pairwise_bhattacharyya(seq, seqlengths)
-    return D
-end
 
 
 function dtw_cost_matrix_bhattacharyya(seq1::Array{kmerdist}, seq2::Array{kmerdist},
@@ -134,4 +159,55 @@ function trackback_bhattacharyya(D::AbstractMatrix{T}) where {T<:Number}
         push!(cols, c)
     end
     return D[end, end], reverse(cols), reverse(rows)
+end
+
+function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
+     sizes::Vector{Int64}) where {T<:Number}
+
+    # estimate that we'll need N⋅logN elements
+    N  = max(sizes...)
+    sz = 2 * N
+    data = [Int[] for i=1:length(sizes)]
+    for i in 1:length(sizes)
+        push!(data[i], 1)
+    end
+
+    #starting point
+    point = convert(Array{Int64},ones(length(sizes)))
+
+    # do trackback
+    @inbounds while point != sizes
+        point = indmaxn(D,point)
+        for i in 1:length(point)
+            push!(data[i], point[i])
+        end
+    end
+    # Possibly either r>1 or c>1 at this point (but not both).
+    # Add the unfinished part of the track to reach [1,1]
+    return D[end, end], data
+end
+
+
+"""
+a function to find the indexes of the maximum value out of
+costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
+at a pos when costmat is an n-dimensional matrix
+"""
+function indmaxn(costmat, pos::Array{Int64})
+    maxval = 0
+    len = length(pos)
+    bestpos = Vector{Int64}(undef,len)
+    for i in 1:((1 << len)-1)
+        newpos = copy(pos)
+        for j in 1:len
+            newpos[j] += (0!= i&(1<<(j-1)))
+        end
+        if !checkbounds(Bool, costmat, newpos... ) continue end
+        val = costmat[newpos...]
+        if (val > maxval)
+            maxval = val
+            bestpos = newpos
+        end
+    end
+    return bestpos
 end
