@@ -56,7 +56,7 @@ function multi_nanopore_dtw_plot(x::Vector{Vector{Float32}},
      end
      plot!(p,thickness_scaling = 2) #plots mean points for the second graph
 
-     for i in 1:stepsize:length(b[1]) # plots the connecting lines between the grafs
+     for i in 1:stepsize:length(b[1])# plots the connecting lines between the grafs
          plot!([b[1][i], b[2][i]], [o[b[1][i]], p[b[2][i]]],color = :black,thickness_scaling = 1, alpha = 0.5, label = false)
      end
      return pl
@@ -169,19 +169,22 @@ function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
     sz = 2 * N
     data = [Int[] for i=1:length(sizes)]
     for i in 1:length(sizes)
-        push!(data[i], 1)
+        push!(data[i], sizes[i])
     end
 
     #starting point
-    point = convert(Array{Int64},ones(length(sizes)))
+    point = copy(sizes)#convert(Array{Int64},ones(length(sizes)))
+    nullp = convert(Vector{Int64},ones(length(sizes)))
 
     # do trackback
-    @inbounds while point != sizes
+    @inbounds while point != nullp
         point = indmaxn(D,point)
         for i in 1:length(point)
             push!(data[i], point[i])
         end
     end
+    data[1] = reverse(data[1])
+    data[2] = reverse(data[2])
     # Possibly either r>1 or c>1 at this point (but not both).
     # Add the unfinished part of the track to reach [1,1]
     return D[end, end], data
@@ -194,17 +197,18 @@ costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
 at a pos when costmat is an n-dimensional matrix
 """
 function indmaxn(costmat, pos::Array{Int64})
-    maxval = 0
+    maxval = Inf
     len = length(pos)
     bestpos = Vector{Int64}(undef,len)
+
     for i in 1:((1 << len)-1)
         newpos = copy(pos)
         for j in 1:len
-            newpos[j] += (0!= i&(1<<(j-1)))
+            newpos[j] -= (0!= i&(1<<(j-1)))
         end
         if !checkbounds(Bool, costmat, newpos... ) continue end
         val = costmat[newpos...]
-        if (val > maxval)
+        if (val <= maxval)
             maxval = val
             bestpos = newpos
         end

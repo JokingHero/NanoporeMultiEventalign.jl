@@ -76,7 +76,7 @@ function multi_bhattacharyya(data::Array{kmerdist},
         # adds the nth-root of the product
         value += part_count^(1/length(data))
      end
-     return value
+     return 1 - (value/(2*n-1) )
 end
 
 """
@@ -113,6 +113,7 @@ function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{
     while true
         #computes the cost at that point
         k = multi_maxval(costmat, searchpos)
+        if (k === Inf) k = 0 end
         @inbounds costmat[searchpos...] = k + multi_bhattacharyya(searchdata)
 
         if searchpos == sizes break end
@@ -135,7 +136,7 @@ costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
 at a searchpos when costmat is an n-dimensional matrix
 """
 @inline function multi_maxval(costmat, searchpos::Array{Int64})
-    maxval = 0
+    maxval = Inf
     len = length(searchpos)
     for i in 1:((1 << len)-1)
         newpos = copy(searchpos)
@@ -144,7 +145,7 @@ at a searchpos when costmat is an n-dimensional matrix
         end
         if (0 in newpos) continue end
         val = costmat[newpos...]
-        if (val > maxval) maxval = val end
+        if (val < maxval) maxval = val end
     end
     return maxval
 end
