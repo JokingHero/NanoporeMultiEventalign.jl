@@ -104,21 +104,43 @@ function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{
     costmat = zeros(sizes...)
     searchpos = convert(Array{Int64},ones(length(seq)))
     searchdata = Array{kmerdist}(undef, length(sizes))
+    for i in 1:length(sizes)
+        @inbounds searchdata[i] = seq[i][searchpos[i]]
+    end
     while true
-        for i in 1:length(sizes)
-            searchdata[i] = seq[i][searchpos[i]]
-        end
+
         #computes the cost at that point
-        costmat[searchpos...] = multi_bhattacharyya(searchdata)
+        k = multi_maxval(costmat, searchpos)
+        @inbounds costmat[searchpos...] =
+        multi_bhattacharyya(searchdata) + k
 
         if searchpos == sizes break end
         for i in 1:length(sizes)
             searchpos[i]+=1
-            if searchpos[i] <= sizes[i] break end
+            if searchpos[i] <= sizes[i]
+                @inbounds searchdata[i] = seq[i][searchpos[i]]
+                break
+            end
             searchpos[i] = 1
+            @inbounds searchdata[i] = seq[i][searchpos[i]]
         end
     end
     return costmat
+end
+
+@inline function multi_maxval(costmat, searchpos::Array{Int64})
+    maxval = 0
+    len = length(searchpos)
+    for i in 1:((1 << len)-1)
+        newpos = copy(searchpos)
+        for j in 1:len
+            newpos[j] -= (0!= i&(1<<(j-1)))
+        end
+        if (0 in newpos) continue end
+        val = costmat[newpos...]
+        if (val > maxval) maxval = val end
+    end
+    return maxval
 end
 
 @inline function indmin3(a,b,c,i,j)

@@ -72,28 +72,6 @@ function multi_dtw_cost_matrix_bhattacharyya(seq::Array{Array{kmerdist}},
 
     # Build the cost matrix
     D = multi_pairwise_bhattacharyya(seq, seqlengths)
-
-    # Initialize first column and first row
-    # for i in 1:length(D)
-    #     for r=2:size(D[i])[1]
-    #         D[i][r, 1] += D[i][r-1, 1]
-    #     end
-    #     for c=2:size(D[i])[2]
-    #         D[i][1, c] += D[i][1, c-1]
-    #     end
-    # end
-    #
-    #
-    # # Complete the cost matrix
-    # for i in 1:length(D)
-    #     for c = 2:size(D[i])[2]
-    #         for r = 2:size(D[i])[1]
-    #             best_neighbor_cost = min(transportcost*D[i][r-1, c], D[i][r-1, c-1], transportcost*D[i][r, c-1])
-    #             D[i][r, c] += best_neighbor_cost
-    #         end
-    #     end
-    # end
-
     return D
 end
 
