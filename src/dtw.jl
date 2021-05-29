@@ -20,16 +20,14 @@ function multi_nanopore_dtw(x::Vector{Vector{Float32}},
      for i in x
         push!(kmerdists, kmerdist_from_changepoints(i, detect_change_points(i, kmers)))
      end
-     seqlengths::Array{Int64} = []
-     for s in kmerdists
-         push!(seqlengths, length(s))
-     end
+     seqlengths::Array{Int64} = length.(kmerdists)
      D = multi_pairwise_bhattacharyya(kmerdists, seqlengths)
      return multi_trackback_bhattacharyya(D, seqlengths)
 end
 
 """
 temporary function to graphically test the multi nanopore dtw function
+this only works on 2 sequences 
 """
 function multi_nanopore_dtw_plot(x::Vector{Vector{Float32}},
     seperation::Int64 = 20, stepsize::Int64 = 20,
@@ -161,8 +159,8 @@ function trackback_bhattacharyya(D::AbstractMatrix{T}) where {T<:Number}
     return D[end, end], reverse(cols), reverse(rows)
 end
 
-function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
-     sizes::Vector{Int64}) where {T<:Number}
+function multi_trackback_bhattacharyya(D::Array{Float64},
+     sizes::Vector{Int64})
 
     # estimate that we'll need N⋅logN elements
     N  = max(sizes...)
@@ -173,9 +171,8 @@ function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
     end
 
     #starting point
-    point = copy(sizes)#convert(Array{Int64},ones(length(sizes)))
+    point = copy(sizes)
     nullp = convert(Vector{Int64},ones(length(sizes)))
-
     # do trackback
     @inbounds while point != nullp
         point = indminn(D,point)
@@ -183,11 +180,10 @@ function multi_trackback_bhattacharyya(D::AbstractMatrix{T},
             push!(data[i], point[i])
         end
     end
-    data[1] = reverse(data[1])
-    data[2] = reverse(data[2])
-    # Possibly either r>1 or c>1 at this point (but not both).
-    # Add the unfinished part of the track to reach [1,1]
-    return D[end, end], data
+    for i in 1:length(data)
+        reverse!(data[i])
+    end
+    return D[sizes...], data
 end
 
 

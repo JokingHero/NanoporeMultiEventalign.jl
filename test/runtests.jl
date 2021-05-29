@@ -44,7 +44,38 @@ end
 
 @testset "utils.jl" begin
     @testset "bhattacharyya" begin
-        @test bhattacharyya(kmerdist(1,1),kmerdist(1,1)) == 0.0
-        @test bhattacharyya(kmerdist(1,2),kmerdist(3,2)) == 0.029445758914095864
+        @test bhattacharyya(kmerdist(1,1, 1,1,[1,1]),kmerdist(1,1, 1,1,[1,1])) == 0.0
+        @test bhattacharyya(kmerdist(1,2, 1,1,[0,2]),kmerdist(3,2, 1,1,[1,1])) == 0.029445758914095864
+    end
+end
+
+@testset "utils.jl" begin
+    @testset "multi_bhattacharyya" begin
+        @test multi_bhattacharyya([kmerdist(1,1, 1,1,[1]), kmerdist(1,1, 1,1,[1])]) == 0.0
+        @test multi_bhattacharyya(
+        [kmerdist(1,1, 1,1,[1]), kmerdist(1,1, 1,1,[1]), kmerdist(1,1, 1,1,[1])]) == 0.0
+        @test multi_bhattacharyya(
+        [kmerdist(1,1, 1,1,[1]), kmerdist(1,1, 1,3,[1,3]), kmerdist(1,1, 1,2,[1,2])]) == 0.5
+        @test multi_bhattacharyya(
+        [kmerdist(1,1, 1,1,[1]), kmerdist(1,1, 2,2,[2,2]), kmerdist(1,1, 3,5,[5,3])]) == 1.0
+    end
+end
+
+@testset "utils.jl" begin
+    @testset "multi_nanopore_dtw" begin
+        @test multi_nanopore_dtw(
+        convert(Vector{Vector{Float32}}, [[1,7,1,6,0,1,6,1],[1,7,1,6,0,1,6,1],[1,7,1,6,0,1,6,1]]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] == 0.0
+
+        @test multi_nanopore_dtw(
+        convert(Vector{Vector{Float32}}, [[1,7,1,6],[1,7,1,6],[1,7,1,6],[1,7,1,6]]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] == 0.0
+        
+        @test multi_nanopore_dtw(
+        convert(Vector{Vector{Float32}}, [[8,2,4,1,6,1],[1,7,1,6,1,5,3],[1,7,1,6,0],[0,7,2]]),
+        "../models/r9.4_70bps.u_to_t_rna.5mer.template.model"
+        )[1] > 1.0
     end
 end

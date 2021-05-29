@@ -20,8 +20,8 @@ end
 struct kmerdist
     mean::Float32
     sd::Float32
-    minVal::Float32
-    maxVal::Float32
+    minval::Float32
+    maxval::Float32
     originaldata::Array{Float32}
 end
 
@@ -57,14 +57,15 @@ function multi_bhattacharyya(data::Array{kmerdist},
          n = cld(lensum,length(data))
      end
      #findes the maximum and minimum values of all the data
-     mini::Float32 = data[1].minVal
-     maxi::Float32 = data[1].maxVal
-     for d in 2:length(data)
-        @inbounds if (mini > data[d].minVal) mini = data[d].minVal end
-        @inbounds if (maxi < data[d].maxVal) maxi = data[d].maxVal end
+     mini::Float32 = data[1].minval
+     maxi::Float32 = data[1].maxval
+     @inbounds for d in 2:length(data)
+         if (mini > data[d].minval) mini = data[d].minval end
+         if (maxi < data[d].maxval) maxi = data[d].maxval end
      end
      value = 0;
      partitiondelta::Float32 = (maxi - mini)/n
+     if (partitiondelta == 0.0) n = 1 end
      for i in 1:n
         part_start::Float32 = mini + partitiondelta * (i-1)
         part_end::Float32 = mini + partitiondelta * i
@@ -76,7 +77,7 @@ function multi_bhattacharyya(data::Array{kmerdist},
         # adds the nth-root of the product
         value += part_count^(1/length(data))
      end
-     return 1 - (value/n)
+     return 1 - (value/n )
 end
 
 """
@@ -104,19 +105,22 @@ end
 fills out an n-dimentional dtw cost matrix
 """
 function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
+    #initalizes the n dimensional matrix with all zeros
     costmat = zeros(sizes...)
-    searchpos = convert(Array{Int64},ones(length(seq)))
+    #creates the starting position for the filling
+    searchpos = convert(Array{Int64}, ones(length(seq)))
     searchdata = Array{kmerdist}(undef, length(sizes))
     for i in 1:length(sizes)
         @inbounds searchdata[i] = seq[i][searchpos[i]]
     end
-    while true
-        #computes the cost at that point
+    @inbounds while true
+        #computes the cost at this point
         k = multi_minval(costmat, searchpos)
         if (k === Inf) k = 0 end
-        @inbounds costmat[searchpos...] = k + multi_bhattacharyya(searchdata)
-
+         costmat[searchpos...] = k + multi_bhattacharyya(searchdata)
+        #stops if reached the end of the matrix
         if searchpos == sizes break end
+        #updates the position
         for i in 1:length(sizes)
             searchpos[i]+=1
             if searchpos[i] <= sizes[i]
@@ -139,13 +143,16 @@ at a searchpos when costmat is an n-dimensional matrix
     minval = Inf
     len = length(searchpos)
     for i in 1:((1 << len)-1)
-        newpos = copy(searchpos)
         for j in 1:len
-            newpos[j] -= (0!= i&(1<<(j-1)))
+            searchpos[j] -= (0!= i&(1<<(j-1)))
         end
-        if (0 in newpos) continue end
-        val = costmat[newpos...]
+        if (0 in searchpos) @goto savetime end
+        val = costmat[searchpos...]
         if (val < minval) minval = val end
+        @label savetime
+        for j in 1:len
+            searchpos[j] += (0!= i&(1<<(j-1)))
+        end
     end
     return minval
 end
