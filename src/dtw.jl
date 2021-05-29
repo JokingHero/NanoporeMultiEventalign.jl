@@ -27,7 +27,7 @@ end
 
 """
 temporary function to graphically test the multi nanopore dtw function
-this only works on 2 sequences 
+this only works on 2 sequences
 """
 function multi_nanopore_dtw_plot(x::Vector{Vector{Float32}},
     seperation::Int64 = 20, stepsize::Int64 = 20,
@@ -37,10 +37,8 @@ function multi_nanopore_dtw_plot(x::Vector{Vector{Float32}},
      for i in x
         push!(kmerdists, kmerdist_from_changepoints(i, detect_change_points(i, kmers)))
      end
-     seqlengths::Array{Int64} = []
-     for s in kmerdists
-         push!(seqlengths, length(s))
-     end
+     seqlengths::Array{Int64}  = length.(kmerdists)
+     
      D = multi_pairwise_bhattacharyya(kmerdists, seqlengths)
      a,b = multi_trackback_bhattacharyya(D, seqlengths)
      o = []
