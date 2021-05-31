@@ -15,5 +15,4 @@ export nanopore_dtw, multi_nanopore_dtw, nanopore_dtw_plot
 export loadnanoporefast5, loadfasta, loadkmers, fasta_to_kmer_values
 export kmerdist, bhattacharyya, multi_bhattacharyya
 
-
 end # module
