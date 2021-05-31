@@ -20,6 +20,9 @@ end
 struct kmerdist
     mean::Float32
     sd::Float32
+    minval::Float32
+    maxval::Float32
+    originaldata::Array{Float32}
 end
 
 
@@ -41,6 +44,56 @@ function bhattacharyya(x::kmerdist,y::kmerdist)
 end
 
 """
+a function that computes the Bhattacharyya coefficient of
+n-distribution
+"""
+function multi_bhattacharyya(data::Array{kmerdist},
+     n::Union{Nothing, Int} = nothing)
+     if n === nothing
+         lensum = 0
+         for d in data
+             lensum += length(d.originaldata)
+         end
+         n = cld(lensum,length(data))
+     end
+     #findes the maximum and minimum values of all the data
+     mini::Float32 = data[1].minval
+     maxi::Float32 = data[1].maxval
+     @inbounds for d in 2:length(data)
+         if (mini > data[d].minval) mini = data[d].minval end
+         if (maxi < data[d].maxval) maxi = data[d].maxval end
+     end
+     value = 0;
+     partitiondelta::Float32 = (maxi - mini)/n
+     if (partitiondelta == 0.0) n = 1 end
+     for i in 1:n
+        part_start::Float32 = mini + partitiondelta * (i-1)
+        part_end::Float32 = mini + partitiondelta * i
+        part_count = 1
+        for d in data
+            #counts all the data that is in the interval part_start-part_end
+            part_count *= countbetween(part_start, part_end, maxi, d.originaldata)
+        end
+        # adds the nth-root of the product
+        value += part_count^(1/length(data))
+     end
+     return 1 - (value/n )
+end
+
+"""
+found out the built in count function added a lot more
+time then it needed to, so this is simple replacement
+"""
+function countbetween(part_start::Float32,
+    part_end::Float32,maxi::Float32,data::Vector{Float32})
+    value = 0
+    for d in data
+        value += (d >= part_start && d < part_end) || (d === maxi && part_end === maxi)
+    end
+    return value
+end
+
+"""
 computetes the bhattacharyya distance for every pair in 2 kmerDist arrays
 and fills out an array with the result
 """
@@ -48,6 +101,61 @@ function pairwise_bhattacharyya(s1::Array{kmerdist},s2::Array{kmerdist})
     return [bhattacharyya(s1[j], s2[i]) for i in 1:length(s2), j in 1:length(s1)]
 end
 
+"""
+fills out an n-dimentional dtw cost matrix
+"""
+function multi_pairwise_bhattacharyya(seq::Array{Array{kmerdist}}, sizes::Array{Int64})
+    #initalizes the n dimensional matrix with all zeros
+    costmat = zeros(sizes...)
+    #creates the starting position for the filling
+    searchpos = convert(Array{Int64}, ones(length(seq)))
+    searchdata = Array{kmerdist}(undef, length(sizes))
+    for i in 1:length(sizes)
+        @inbounds searchdata[i] = seq[i][searchpos[i]]
+    end
+    @inbounds while true
+        #computes the cost at this point
+        k = multi_minval(costmat, searchpos)
+        if (k === Inf) k = 0 end
+         costmat[searchpos...] = k + multi_bhattacharyya(searchdata)
+        #stops if reached the end of the matrix
+        if searchpos == sizes break end
+        #updates the position
+        for i in 1:length(sizes)
+            searchpos[i]+=1
+            if searchpos[i] <= sizes[i]
+                @inbounds searchdata[i] = seq[i][searchpos[i]]
+                break
+            end
+            searchpos[i] = 1
+            @inbounds searchdata[i] = seq[i][searchpos[i]]
+        end
+    end
+    return costmat
+end
+
+"""
+a function to find the minimum value out of
+costmat[x-1,y-1,...], costmat[x-1,y,...], costmat[x,y-1,...], ect
+at a searchpos when costmat is an n-dimensional matrix
+"""
+@inline function multi_minval(costmat, searchpos::Array{Int64})
+    minval = Inf
+    len = length(searchpos)
+    for i in 1:((1 << len)-1)
+        for j in 1:len
+            searchpos[j] -= (0!= i&(1<<(j-1)))
+        end
+        if (0 in searchpos) @goto savetime end
+        val = costmat[searchpos...]
+        if (val < minval) minval = val end
+        @label savetime
+        for j in 1:len
+            searchpos[j] += (0!= i&(1<<(j-1)))
+        end
+    end
+    return minval
+end
 
 @inline function indmin3(a,b,c,i,j)
     if a <= b
@@ -98,8 +206,10 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
     for i in 2:length(changepoints)
         #computes the average of a changepoint
         average = 0
+        datalist = []
         for j in changepoints[i-1]:changepoints[i]-1
             average += x[j]
+            push!(datalist,x[j])
         end
         average /= changepoints[i] - changepoints[i-1]
         #computes the standard deviation of a changeoint
@@ -109,7 +219,7 @@ function kmerdist_from_changepoints(x::Vector{Float32}, changepoints::Vector{Any
         end
         stdv /= changepoints[i] - changepoints[i-1]
         stdv = sqrt(stdv)
-        push!(kmerdists, kmerdist(average, stdv))
+        push!(kmerdists, kmerdist(average, stdv, min(datalist...), max(datalist...), datalist))
     end
     return kmerdists
 end
